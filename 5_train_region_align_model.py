@@ -13,7 +13,7 @@ from evaluate_utils.write_utils import write_all_losses_and_scores_to_tensorboar
 from dataset.create_image_report_dataloader import get_data_loaders
 # from models.feat_text_generator.evaluate import evaluate_model
 from models.risk_model.region_align_model import CrossAlignModel
-from configs.region_model_align_risk_config import *
+from configs.region_align_model_config import *
 from path_datasets_and_weights import path_runs
 from utils.utils import write_config, seed_everything
 from utils.file_and_folder_operations import *
