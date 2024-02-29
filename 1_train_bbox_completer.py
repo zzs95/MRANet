@@ -93,9 +93,10 @@ def train_model(
         steps_taken = 0
         for num_batch, batch in tqdm(enumerate(train_dl)):
             # batch is a dict with keys "images" and "targets"
-            _, targets = batch.values()
+            # _, targets = batch.values()
+            targets = batch['targets']
             targets = [{k: v.to(device, non_blocking=True) for k, v in t.items()} for t in targets]
-
+            targets = {'bbox':[t['boxes'] for t in targets], 'label':[ t['labels'] for t in targets]}
             batch_size = len(targets)
             bboxes_masked, bboxes_gt, label_gt, _ = prepare_bbox(targets['bbox'], targets['label'], if_mask=True)
             with torch.autocast(device_type="cuda", dtype=torch.float16):
@@ -173,8 +174,8 @@ def create_run_folder():
     if os.path.exists(run_folder_path):
         log.error(f"Folder to save run {RUN} already exists at {run_folder_path}.")
         log.error("Delete the folder or change the run number.")
-        # shutil.rmtree(run_folder_path)
-        return None
+        shutil.rmtree(run_folder_path)
+        # return None
 
     os.mkdir(run_folder_path)
     os.mkdir(weights_folder_path)
@@ -207,7 +208,8 @@ def create_run_folder():
 
 def main():
     weights_folder_path, tensorboard_folder_path, config_file_path, config_parameters = create_run_folder()
-    train_loader, val_loader = get_data_loaders(load_img=False, path_full_dataset_a=path_dataset)
+    train_loader, val_loader = get_data_loaders(load_img=False, path_full_dataset_a=path_dataset, SEED=SEED, BATCH_SIZE=BATCH_SIZE, NUM_WORKERS=NUM_WORKERS, IMAGE_INPUT_SIZE=IMAGE_INPUT_SIZE,
+                                                PERCENTAGE_OF_TRAIN_SET_TO_USE=PERCENTAGE_OF_TRAIN_SET_TO_USE, PERCENTAGE_OF_VAL_SET_TO_USE=PERCENTAGE_OF_VAL_SET_TO_USE)
     log.info(f"Train: {len(train_loader.dataset)} images")
     log.info(f"Val: {len(val_loader.dataset)} images")
     config_parameters["TRAIN NUM IMAGES"] = len(train_loader.dataset)
