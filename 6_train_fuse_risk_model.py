@@ -160,7 +160,7 @@ def evaluate_model(model, val_dl, lr_scheduler, optimizer, scaler, writer, run_p
 
 def get_model(device):
     model = CrossAlignModel(stage='stage_3')
-    checkpoint = torch.load(CHECKPOINT, map_location=torch.device("cpu"))
+    checkpoint = torch.load('./checkpoints/region_align_model.pt', map_location=torch.device("cpu"))
     model_init_state_dict = model.state_dict()
     modules = np.unique([k for k in model_init_state_dict.keys()])
     stage1_modules = np.unique([k for k in checkpoint["model"].keys()])
@@ -175,7 +175,7 @@ def get_model(device):
         else:
             new_state_dict[k] = model_init_state_dict[k]
             
-    checkpoint = torch.load('checkpoints/region_align_model.pt', map_location=torch.device("cpu"))
+    checkpoint = torch.load('./checkpoints/image_risk_model.pt', map_location=torch.device("cpu"))
     for k, v in checkpoint['model'].items():
         if k in load_modules:
             new_state_dict[k] = checkpoint["model"][k]
@@ -185,7 +185,7 @@ def get_model(device):
     return model
 
 def create_run_folder():
-    run_folder_path = os.path.join(path_runs, exp_name, f"run_{RUN}")
+    run_folder_path = os.path.join(path_runs, 'fuse_risk_model', f"run_{RUN}")
     checkpoints_folder_path = os.path.join(run_folder_path, "checkpoints")
     tensorboard_folder_path = os.path.join(run_folder_path, "tensorboard")
     
@@ -215,11 +215,11 @@ def create_run_folder():
     return run_folder_path, tensorboard_folder_path, config_file_path, config_parameters
 
 def main():
-    (run_folder_path, tensorboard_folder_path, config_file_path, config_parameters) = create_run_folder(SEED)
+    (run_folder_path, tensorboard_folder_path, config_file_path, config_parameters) = create_run_folder()
     seed_everything(config_parameters['SEED'])
     train_loader, val_loader, test_loader, gpt_tokenizer, train_sampler = get_data_loaders(setname='brown', batch_size=config_parameters['BATCH_SIZE'], 
-                                                                                           image_input_size=IMAGE_INPUT_SIZE, is_token=False, random_state_i=data_seed,
-                                                                                           worker_seed=config_parameters['SEED'], )
+                                                                                           image_input_size=IMAGE_INPUT_SIZE, is_token=False, random_state_i=SEED,
+                                                                                           worker_seed=SEED )
     config_parameters["TRAIN total NUM"] = len(train_loader.dataset)
     config_parameters["TRAIN index NUMs"] = train_loader.dataset.tokenized_dataset['index']
     config_parameters["VAL total NUM"] = len(val_loader.dataset)
@@ -305,7 +305,4 @@ def main():
     
         
 if __name__ == "__main__":
-    exp_name = 'fuse_risk_model'
-    CHECKPOINT = path_runs + '/align_model/run_2/checkpoints/epoch_14999.pt'
-    out_folder = os.path.join(path_runs, exp_name, f"run_{RUN}")
     main()
