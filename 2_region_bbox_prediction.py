@@ -57,7 +57,7 @@ def testing(
             batch_size = images.size(0)
             images = images.to(device, non_blocking=True)  # shape (batch_size x 1 x 512 x 512)
             output = images
-            targets = np.array( [[0,0,512,512]] * 29*batch_size).reshape(batch_size, 29, 4)
+            targets = [{'boxes': np.array( [[0,0,512,512]] * 29).reshape(29, 4)}] * batch_size
 
             with torch.autocast(device_type='cuda', dtype=torch.float16):
                 losses, detections, top_region_features, class_detected, global_feature = model(images)
@@ -71,6 +71,7 @@ def testing(
                 pred_bbox_fix = torch.clone(pred_bbox)
                 pred_bbox_fix[~pred_label] = bbox_fix[~pred_label]
                 
+                # manual correct
                 x_err = (pred_bbox_fix[:,:,3] - pred_bbox_fix[:,:,1]) <= 0
                 y_err = (pred_bbox_fix[:,:,2] - pred_bbox_fix[:,:,0]) <= 0
                 x_err_idx = np.where(x_err[0].cpu().numpy())[0].tolist()
@@ -125,8 +126,8 @@ def create_run_folder(setname):
     Run folder will contain a folder for saving the trained weights, a folder for the tensorboard files
     as well as a config file that specifies the overall parameters used for training.
     """
-    run_folder_path = os.path.join(path_runs, 'object_detector2', f"run_{RUN}", setname)
-    extracted_feats_folder_path = os.path.join(run_folder_path, "extracted_feats")
+    run_folder_path = os.path.join(path_runs, 'object_detector', f"run_{RUN}", setname)
+    extracted_feats_folder_path = os.path.join(run_folder_path, "predicted_bboxes")
     tensorboard_folder_path = os.path.join(run_folder_path, "tensorboard")
 
     if os.path.exists(run_folder_path):
