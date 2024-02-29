@@ -52,7 +52,7 @@ class BboxCompleter(nn.Module):
 
 def prepare_bbox(batch_bbox, batch_label, if_mask=True ):
     batch_size = len(batch_bbox)
-    device = batch_bbox.device
+    device = batch_label[0].device
     bboxes_gt = torch.zeros([batch_size, 29, 4]).to(device, non_blocking=True)
     label_gt = torch.zeros([batch_size, 29]).to(device, non_blocking=True)
     bboxes_masked = torch.zeros([batch_size, 29, 4]).to(device, non_blocking=True)
@@ -63,7 +63,7 @@ def prepare_bbox(batch_bbox, batch_label, if_mask=True ):
                 label_idx = label_ - 1
             else:
                 label_idx = torch.where(label_)[0]
-            bbox_ = bbox_[label_idx]
+                bbox_ = bbox_[label_idx]
             bbox_bbox = torch.concat([bbox_.max(0)[0][[2,3]][None] , bbox_.min(0)[0][[0,1]][None]], dim=0)
             bbox_size = bbox_bbox[0] - bbox_bbox[1]
             max_length = max(torch.abs(bbox_size))
