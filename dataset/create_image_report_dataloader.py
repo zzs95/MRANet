@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append('/home/brownradai/Projects/covid_cxr/region_surv')
+sys.path.append('/media/brownradai/ssd_2t/covid_cxr/MRANet/')
 import random
 import torch
 import numpy as np
@@ -429,7 +429,7 @@ if __name__=="__main__":
     i = 9
     i_batch = int(np.floor(i / num_sentence))
     i_curr = int(i%num_sentence)
-    name_tokenized = batch['input_ids'][i][1:torch.argwhere(batch['input_ids'][i]==25)[0,0]]
+    name_tokenized = batch['idxs'][i][1:torch.argwhere(batch['idxs'][i]==25)[0,0]]
     name_str = batch['reference_sentences'][i_batch][i_curr].split(':')[0]
     
     
