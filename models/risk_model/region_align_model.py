@@ -68,11 +68,14 @@ class CrossAlignModel(nn.Module):
         
         self.region_visual_embedder = nn.ModuleList()
         for k, v in COVID_REGIONS.items():
+            if k == 'Bones':
+                self.bone_global_embedder = nn.Linear(2048, self.roi_embed_dim * len(self.roi_channel_list))
+                v = v + [29,]
             self.region_visual_embedder.append(MLPHead(len(v) * self.roi_embed_dim * len(self.roi_channel_list), self.representation_size))
         self.region_visual_embedder.append(MLPHead(2048, self.representation_size)) # impression, global_feat
         
         # SSE
-        self.global_attention_pooler = AttentionPool2d(in_features=2048, feat_size=7, embed_dim=self.risk_embed_dim, num_heads=8)  #  global_feat --> risk_feat
+        self.survival_attention_pooler = AttentionPool2d(in_features=2048, feat_size=7, embed_dim=self.risk_embed_dim, num_heads=8)  #  global_feat --> risk_feat
         self.region_risk_embedder = nn.ModuleList()
         for k, v in COVID_REGIONS.items():
             self.region_risk_embedder.append(MLPHead(self.risk_embed_dim, self.representation_size) )
@@ -120,10 +123,13 @@ class CrossAlignModel(nn.Module):
                 sentence_feat_embed.append(None)
             elif k == 'Lungs' or k == 'Pleura' or k =='Heart and mediastinum' or k == 'Bones': 
                 region_features_tmp = torch.index_select(roi_feats, 1, torch.LongTensor(v).to(roi_feats.device)).reshape([roi_feats.shape[0], -1])
+                if k == 'Bones':
+                    region_features_tmp = torch.concat([region_features_tmp, self.bone_global_embedder(global_feat)], dim=1)
                 if risk_guide == False:
                     sentence_feat_embed.append(self.region2sentence_embedder(self.region_visual_embedder[i](region_features_tmp))[:,None])
                 else:
                     sentence_feat_embed.append(self.region2sentence_embedder(self.region_visual_embedder[i](region_features_tmp) + self.region_risk_embedder[i](risk_feat))[:,None]) 
+                
         # IMPRESSION
         if risk_guide == False:
             sentence_feat_embed.append(self.region2sentence_embedder(self.region_visual_embedder[-1](global_feat))[:,None]) 
@@ -136,11 +142,11 @@ class CrossAlignModel(nn.Module):
         images = batch["images"].to(device, non_blocking=True)
         with torch.no_grad():
             local_features, global_x, features = self.img_encoder.encoder(images, return_features=True)
-            global_features = self.global_attention_pooler(local_features)
+            survival_features = self.survival_attention_pooler(local_features)
         if mean_pool:
-            return global_features, global_x, features
+            return survival_features, global_x, features
         else:
-            return global_features, features
+            return survival_features, features
     
     def region_encode(self, batch, global_feat, risk_feat, multi_scale_features, device, risk_guide=True):
         # roi_align
@@ -216,13 +222,13 @@ class CrossAlignModel(nn.Module):
         # image_sentence_embed = self.no_region_encode(global_feat, None, risk_guide=False) # img + no_MRE + no_SSE (img_only)
         # image_sentence_embed = self.no_region_encode(global_feat, risk_feat, risk_guide=True) # img + no_MRE + SSE
 
-        text_hidden_states = self.feature_space_transformation_nn(image_sentence_embed.view(batch_size * self.num_queries, self.embed_dim)) 
-        lm_logits, language_model_image_loss = self.language_model(
-            input_ids=gpt_input_ids,
-            attention_mask=gpt_attention_mask,
-            image_hidden_states=text_hidden_states.view(batch_size * self.num_queries, self.embed_dim),
-            return_loss=True )      
-        language_model_text_loss = torch.tensor(0.0).cuda() 
+        # text_hidden_states = self.feature_space_transformation_nn(image_sentence_embed.view(batch_size * self.num_queries, self.embed_dim)) 
+        # lm_logits, language_model_image_loss = self.language_model(
+        #     input_ids=gpt_input_ids,
+        #     attention_mask=gpt_attention_mask,
+        #     image_hidden_states=text_hidden_states.view(batch_size * self.num_queries, self.embed_dim),
+        #     return_loss=True )      
+        # language_model_text_loss = torch.tensor(0.0).cuda() 
         
         loss_dict = {}
         loss_dict['loss'] = 0
