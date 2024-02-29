@@ -329,7 +329,8 @@ def create_run_folder():
 
 def main():
     weights_folder_path, tensorboard_folder_path, config_file_path, config_parameters = create_run_folder()
-    train_loader, val_loader = get_data_loaders()
+    train_loader, val_loader = get_data_loaders(load_img=True, path_full_dataset_a=path_full_dataset, SEED=SEED, BATCH_SIZE=BATCH_SIZE, NUM_WORKERS=NUM_WORKERS, IMAGE_INPUT_SIZE=IMAGE_INPUT_SIZE,
+                                            PERCENTAGE_OF_TRAIN_SET_TO_USE=PERCENTAGE_OF_TRAIN_SET_TO_USE, PERCENTAGE_OF_VAL_SET_TO_USE=PERCENTAGE_OF_VAL_SET_TO_USE)
     log.info(f"Train: {len(train_loader.dataset)} images")
     log.info(f"Val: {len(val_loader.dataset)} images")
     config_parameters["TRAIN NUM IMAGES"] = len(train_loader.dataset)
