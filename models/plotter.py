@@ -80,7 +80,7 @@ def plot_gt_and_pred_bboxes_to_tensorboard(writer, overall_steps_taken, images, 
                 region_colors.pop()
 
             for region_index, color in zip(region_indices, region_colors):
-                box_gt = gt_boxes_img[region_index].tolist()
+                box_gt = gt_boxes_img['boxes'][region_index].tolist()
                 box_pred = pred_boxes_img[region_index].tolist()
                 box_class_detected = class_detected_img[region_index]
 
