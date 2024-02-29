@@ -156,10 +156,10 @@ def gen_model(
 
 def get_model(device):
     model = CrossAlignModel(stage='pred')
-    CHECKPOINT = path_runs + '/fuse_risk_model/run_1/checkpoints/epoch_19.pt'
+    CHECKPOINT = './checkpoints/fuse_risk_model.pt'
     sur_checkpoint = torch.load(CHECKPOINT, map_location=torch.device("cpu"))
     log.info("Load checkpoint:"+CHECKPOINT)
-    CHECKPOINT = path_runs + '/align_model/run_2/checkpoints/epoch_14999.pt'
+    CHECKPOINT = './checkpoints/region_align_model.pt'
     gen_checkpoint = torch.load(CHECKPOINT, map_location=torch.device("cpu"))
     log.info("Load checkpoint:"+CHECKPOINT)
     
