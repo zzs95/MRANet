@@ -151,7 +151,7 @@ def gen_model(
 
         log.info("Test loader: generating sentences/reports... DONE.")
 
-    pd.DataFrame.from_dict(gen_text).to_excel(os.path.join(generated_sentences_and_reports_folder_path, set_name+'_text_cam_seed6.xlsx'))
+    pd.DataFrame.from_dict(gen_text).to_excel(os.path.join(generated_sentences_and_reports_folder_path, set_name+'_text_cam.xlsx'))
     return None
 
 def get_model(device):
